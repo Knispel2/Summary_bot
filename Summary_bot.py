@@ -1,11 +1,37 @@
 from selenium import webdriver, common
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import os
+import shutil
+import pickle
 
-driver=webdriver.Chrome(ChromeDriverManager().install())
 
 def timesleep(sleeptime=1.7):
     time.sleep(sleeptime)
+
+seen=set()
+with open('seen_base.txt','r') as f:
+     seen = f.readlines()
+
+
+
+folder_path = "C:\\FSR_Data"
+
+def give_chrome_option(folder_path):
+    chromeOptions = webdriver.ChromeOptions() #setup chrome option
+    prefs = {"download.default_directory" : folder_path,
+           "download.prompt_for_download": False,
+           "download.directory_upgrade": True}  #set path
+    chromeOptions.add_experimental_option("prefs", prefs) #set option
+    return chromeOptions
+driver= webdriver.Chrome(ChromeDriverManager().install(), chrome_options = give_chrome_option(folder_path))
+#driver = webdriver.Chrome(chrome_options = give_chrome_option(folder_path))
+
+
+
+
+
+
 
 url='https://webanketa.msu.ru/index.php#panel-login-internal'
 driver.get(url)
@@ -24,6 +50,7 @@ try:
 except common.exceptions.NoSuchElementException:
     print('Already authtorised')
 timesleep()
+
 
 
 lnk=driver.find_element_by_link_text('Все заявления')
@@ -45,8 +72,6 @@ try:
                     fname=nname[0]+'_'+nname[1][0]+(nname[2][0] if len(nname)>2 else '')+'_'+num
                     fname1=nname[0]+'_'+nname[1][0]+'_'+tds[0].text
                     print(name,end=' ')
-                    if name=='ПОЧ ЛОБАНОВ МИКЕЛ':
-                        fname1='поч лобанов_м_94434'
                     print(fname1)
                     fname=fname.strip().casefold()
                     fname1=fname1.strip().casefold()
@@ -90,4 +115,5 @@ try:
 except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
     print(err)
 
-with open('D:/My Programs/Python/priemka/seen_wa','wb') as f: pickle.dump(seen,f)
+with open('seen_wa','wb') as f: 
+    pickle.dump(seen,f) #тут надо как-то переделать
