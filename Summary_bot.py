@@ -9,13 +9,21 @@ import pickle
 def timesleep(sleeptime=1.7):
     time.sleep(sleeptime)
 
-seen=set()
-with open('seen_base.txt','r') as f:
-     seen = f.readlines()
+def example(f):
+  try:
+    return pickle.load(f)
+  except EOFError:
+    return set()
 
 
 
-folder_path = "C:\\FSR_Data"
+folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\' + 'humans'
+with open(folder_path, 'wb+') as f:
+     seen = example(f)
+
+
+
+folder_path = r'C:\FSR_Data' + '\\'
 
 def give_chrome_option(folder_path):
     chromeOptions = webdriver.ChromeOptions() #setup chrome option
@@ -25,13 +33,7 @@ def give_chrome_option(folder_path):
     chromeOptions.add_experimental_option("prefs", prefs) #set option
     return chromeOptions
 driver= webdriver.Chrome(ChromeDriverManager().install(), chrome_options = give_chrome_option(folder_path))
-#driver = webdriver.Chrome(chrome_options = give_chrome_option(folder_path))
-
-
-
-
-
-
+folder_path = 'C://FSR_Data/'
 
 url='https://webanketa.msu.ru/index.php#panel-login-internal'
 driver.get(url)
@@ -65,6 +67,8 @@ try:
             for i in trs:
                 tds=i.find_elements_by_tag_name('td')
                 num=tds[0].text
+                num = num.split('\n')
+                num = num[0]
                 name=tds[1].text
                 print(num+name)
                 if num+name not in seen:
@@ -75,10 +79,13 @@ try:
                     print(fname1)
                     fname=fname.strip().casefold()
                     fname1=fname1.strip().casefold()
-                    pdf_doc='C:/Users/maxik/Downloads/'+fname+'.pdf'
-                    pdf_doc1='C:/Users/maxik/Downloads/'+fname1+'.pdf'
-                    wa_doc='D:/webanketa/'+fname+'.pdf'
-                    wa_doc1='D:/webanketa/'+fname1+'.pdf'
+                    pdf_doc = folder_path + fname + '.pdf'
+                    pdf_doc1 = folder_path + fname1 + '.pdf'
+                    if (os.path.exists(pdf_doc)):
+                        seen.add(num+name)
+                        continue
+                    wa_doc = folder_path + fname + '.pdf'
+                    wa_doc1 = folder_path + fname1 + '.pdf'
                     btn=tds[7].find_element_by_tag_name('button')
                     btn.click()
                     timesleep()
@@ -97,13 +104,12 @@ try:
                         time.sleep(2)
                         tick+=1
                         if tick==10:
-                            for file in filter(lambda x:x.endswith('.pdf'),os.listdir('C:/Users/maxik/Downloads')):
+                            for file in filter(lambda x:x.endswith('.pdf'),os.listdir(folder_path)):
                                 if nname[0].lower() in file:
                                     fname=file[:-4]
-                                    pdf_doc='C:/Users/maxik/Downloads/'+fname+'.pdf'
+                                    pdf_doc=folder_path+fname+'.pdf'
                                     break
                             tick=0
-                    shutil.move(pdf_doc,'D:/webanketa/'+fname+'.pdf')
                     seen.add(num+name)
         except Exception as err:
             print('*',err,'*')
@@ -115,5 +121,5 @@ try:
 except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
     print(err)
 
-with open('seen_wa','wb') as f: 
+with open(r'C:\\FSR_Data' + '\\' + 'base' + '\\' + 'humans','wb') as f: 
     pickle.dump(seen,f) #тут надо как-то переделать
