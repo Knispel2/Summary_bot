@@ -4,7 +4,8 @@ import time
 import os
 import shutil
 import pickle
-
+import pandas
+import collections
 
 def timesleep(sleeptime=1.7):
     time.sleep(sleeptime)
@@ -59,6 +60,7 @@ lnk=driver.find_element_by_link_text('Все заявления')
 lnk.click()
 ind=2
 timesleep()
+directions = []
 try:
     while True:
         try:
@@ -66,22 +68,23 @@ try:
             trs=tbd.find_elements_by_tag_name('tr')
             for i in trs:
                 tds=i.find_elements_by_tag_name('td')
-                num=tds[0].text
-                num = num.split('\n')
-                num = num[0]
+                num=tds[0].text.split('\n')[0]
                 name=tds[1].text
-                print(num+name)
+                directions = directions + tds[3].text.split('\n')
                 if num+name not in seen:
                     nname=name.split()
                     fname=nname[0]+'_'+nname[1][0]+(nname[2][0] if len(nname)>2 else '')+'_'+num
                     fname1=nname[0]+'_'+nname[1][0]+'_'+tds[0].text
-                    print(name,end=' ')
-                    print(fname1)
+                    fname2=nname[0]+'_'+nname[1][0]+'_'+num
+                    #print(name,end=' ')
+                    #print(fname1)
                     fname=fname.strip().casefold()
                     fname1=fname1.strip().casefold()
+                    fname2=fname2.strip().casefold()
                     pdf_doc = folder_path + fname + '.pdf'
                     pdf_doc1 = folder_path + fname1 + '.pdf'
-                    if (os.path.exists(pdf_doc)):
+                    pdf_doc2 = folder_path + fname2 + '.pdf'
+                    if (os.path.exists(pdf_doc) or (os.path.exists(pdf_doc1)) or (os.path.exists(pdf_doc2))):
                         seen.add(num+name)
                         continue
                     wa_doc = folder_path + fname + '.pdf'
@@ -114,12 +117,21 @@ try:
         except Exception as err:
             print('*',err,'*')
             continue
-        lnk=driver.find_element_by_link_text(str(ind))
-        lnk.click()
+        try:
+            lnk=driver.find_element_by_link_text(str(ind))
+            lnk.click()
+        except:
+            print("Страницы закончились")
+            break
         timesleep()
         ind+=1
 except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
     print(err)
+
+
+
+print(collections.Counter(directions))
+print()
 
 with open(r'C:\\FSR_Data' + '\\' + 'base' + '\\' + 'humans','wb') as f: 
     pickle.dump(seen,f) #тут надо как-то переделать
