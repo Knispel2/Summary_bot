@@ -3,9 +3,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 import shutil
-import pickle
 import pandas
 import collections
+import fitz
+from datetime import datetime
 
 def timesleep(sleeptime=1.7):
     time.sleep(sleeptime)
@@ -14,16 +15,65 @@ def example(f):
   try:
     return pickle.load(f)
   except EOFError:
-    return set()
+    return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Номер соц.страхования', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ'])
+
+def PDFtiINFO(file):
+    folder='C:/FSR_Data/'
+    data = [None]*3
+    doc=fitz.open(file) #кряк с директорией
+    base = str(doc.loadPage(2).getText())
+    print(base)
+    if 'Фундаментальная математика и механика' in doc.loadPage(0).getText():
+        if '''Основания для участия в конкурсе по результатам вступительных испытаний, проводимых МГУ для отдельных
+    категорий поступающих (вместо ЕГЭ)
+    0''' in doc.loadPage(0).getText():
+            data[0] = 0
+        else:
+            data[0] = 1
+        j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+        start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+        buf = []
+        while(base[start] != '.'):
+            if base[start] not in {'\n', ' '}:
+                buf.append(base[start])
+            start+=1
+        data[1] = ''.join(buf) 
+        j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+    (при наличии)''')
+        start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+    (при наличии)''')
+        buf = []
+        while(base[start] != 'С'):
+            if base[start] not in {'\n', ' '}:
+                buf.append(base[start])
+            start+=1
+        data[2] = ''.join(buf)
+    else:
+        base = str(doc.loadPage(1).getText())
+        j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+        start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+        buf = []
+        while(base[start] != '.'):
+            if base[start] not in {'\n', ' '}:
+                buf.append(base[start])
+            start+=1
+        data[1] = ''.join(buf) 
+        j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+    (при наличии)''')
+        start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+    (при наличии)''')
+        buf = []
+        while(base[start] != 'С'):
+            if base[start] not in {'\n', ' '}:
+                buf.append(base[start])
+            start+=1
+        data[2] = ''.join(buf)
+    return data
 
 
 
-folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\' + 'humans'
-with open(folder_path, 'wb+') as f:
-     seen = example(f)
-
-
-
+folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
+main_base = pandas.read_csv(folder_path + 'base.csv') 
 folder_path = r'C:\FSR_Data' + '\\'
 
 def give_chrome_option(folder_path):
@@ -35,6 +85,11 @@ def give_chrome_option(folder_path):
     return chromeOptions
 driver= webdriver.Chrome(ChromeDriverManager().install(), chrome_options = give_chrome_option(folder_path))
 folder_path = 'C://FSR_Data/'
+
+
+def to_realtime(data):
+    dateFormatter = "%d.%m.%Y %H:%M:%S"    
+    return datetime.strptime(data, dateFormatter)
 
 url='https://webanketa.msu.ru/index.php#panel-login-internal'
 driver.get(url)
@@ -54,8 +109,6 @@ except common.exceptions.NoSuchElementException:
     print('Already authtorised')
 timesleep()
 
-
-
 lnk=driver.find_element_by_link_text('Все заявления')
 lnk.click()
 ind=2
@@ -65,55 +118,77 @@ try:
     while True:
         try:
             tbd=driver.find_element_by_tag_name('tbody')
-            trs=tbd.find_elements_by_tag_name('tr')
+            trs=tbd.find_elements_by_tag_name('tr') #множество строк
             for i in trs:
-                tds=i.find_elements_by_tag_name('td')
+                tds=i.find_elements_by_tag_name('td') #отдельно взятая строка
+                
                 num=tds[0].text.split('\n')[0]
                 name=tds[1].text
+                data_time = tds[6].text
+                status = tds[5].text
+                direction = tds[3].text.split('\n')
                 directions = directions + tds[3].text.split('\n')
-                if num+name not in seen:
-                    nname=name.split()
-                    fname=nname[0]+'_'+nname[1][0]+(nname[2][0] if len(nname)>2 else '')+'_'+num
-                    fname1=nname[0]+'_'+nname[1][0]+'_'+tds[0].text
-                    fname2=nname[0]+'_'+nname[1][0]+'_'+num
-                    #print(name,end=' ')
-                    #print(fname1)
-                    fname=fname.strip().casefold()
-                    fname1=fname1.strip().casefold()
-                    fname2=fname2.strip().casefold()
-                    pdf_doc = folder_path + fname + '.pdf'
-                    pdf_doc1 = folder_path + fname1 + '.pdf'
-                    pdf_doc2 = folder_path + fname2 + '.pdf'
-                    if (os.path.exists(pdf_doc) or (os.path.exists(pdf_doc1)) or (os.path.exists(pdf_doc2))):
-                        seen.add(num+name)
+                
+                nname=name.split()
+                fname=nname[0]+'_'+nname[1][0]+(nname[2][0] if len(nname)>2 else '')+'_'+num
+                fname1=nname[0]+'_'+nname[1][0]+'_'+tds[0].text
+                fname2=nname[0]+'_'+nname[1][0]+'_'+num
+                fname=fname.strip().casefold()
+                fname1=fname1.strip().casefold()
+                fname2=fname2.strip().casefold()
+                pdf_doc = folder_path + fname + '.pdf'
+                pdf_doc1 = folder_path + fname1 + '.pdf'
+                pdf_doc2 = folder_path + fname2 + '.pdf'
+
+                if main_base['ID'].str.contains(num).any():
+                    if (to_realtime(main_base.loc[df['ID'] == str(num), 'Дата']) == to_realtime(data_time)):
                         continue
-                    wa_doc = folder_path + fname + '.pdf'
-                    wa_doc1 = folder_path + fname1 + '.pdf'
-                    btn=tds[7].find_element_by_tag_name('button')
-                    btn.click()
-                    timesleep()
-                    prt=driver.find_element_by_link_text('Печать')
-                    prt.click()
-                    timesleep()
-                    mft=driver.find_element_by_class_name('modal-footer')
-                    prt=mft.find_element_by_class_name('btn-primary')
-                    prt.click()
-                    tick=0
-                    while not(os.path.exists(pdf_doc)):
-                        if os.path.exists(pdf_doc1):
-                            fname=fname1
-                            pdf_doc=pdf_doc1
-                            break
-                        time.sleep(2)
-                        tick+=1
-                        if tick==10:
-                            for file in filter(lambda x:x.endswith('.pdf'),os.listdir(folder_path)):
-                                if nname[0].lower() in file:
-                                    fname=file[:-4]
-                                    pdf_doc=folder_path+fname+'.pdf'
-                                    break
-                            tick=0
-                    seen.add(num+name)
+                    else:
+                        os.remove(pdf_doc)
+                        os.remove(pdf_doc1)
+                        os.remove(pdf_doc2)
+                        main_base.loc[df['ID'] == str(num), 'Дата'] = data_time
+                        main_base.loc[df['ID'] == str(num), 'Статус ошибок'] = status                
+                        
+                wa_doc = folder_path + fname + '.pdf'
+                wa_doc1 = folder_path + fname1 + '.pdf'
+                btn=tds[7].find_element_by_tag_name('button')
+                btn.click()
+                timesleep()
+                prt=driver.find_element_by_link_text('Печать')
+                prt.click()
+                timesleep()
+                mft=driver.find_element_by_class_name('modal-footer')
+                prt=mft.find_element_by_class_name('btn-primary')
+                prt.click()
+                tick=0
+                while not(os.path.exists(pdf_doc)):
+                    if os.path.exists(pdf_doc1):
+                        fname=fname1
+                        pdf_doc=pdf_doc1
+                        break
+                    time.sleep(2)
+                    tick+=1
+                    if tick==10:
+                        for file in filter(lambda x:x.endswith('.pdf'),os.listdir(folder_path)):
+                            if nname[0].lower() in file:
+                                fname=file[:-4]
+                                pdf_doc=folder_path+fname+'.pdf'
+                                break
+                        tick=0
+                flag = True
+                if os.path.exists(pdf_doc):
+                    PDFinfo = PDFtoINFO(pdf_doc)
+                elif os.path.exists(pdf_doc1):
+                    flag = False
+                    PDFinfo = PDFtoINFO(pdf_doc1)
+
+                new_row = {'ID':num, 'ФИО':name, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
+                           'Статус согласия': '-', 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0]}                
+                main_base = main_base.append(new_row, ignore_index=True)
+                folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
+                main_base.to_csv(folder_path + 'base.csv')
+                
         except Exception as err:
             print('*',err,'*')
             continue
@@ -133,5 +208,4 @@ except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoS
 print(collections.Counter(directions))
 print()
 
-with open(r'C:\\FSR_Data' + '\\' + 'base' + '\\' + 'humans','wb') as f: 
-    pickle.dump(seen,f) #тут надо как-то переделать
+
