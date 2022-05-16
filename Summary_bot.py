@@ -11,71 +11,78 @@ from datetime import datetime
 def timesleep(sleeptime=1.7):
     time.sleep(sleeptime)
 
-def example(f):
+def example():
   try:
-    return pickle.load(f)
-  except EOFError:
-    return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Номер соц.страхования', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ'])
+      return pandas.read_csv(folder_path + 'base.csv')
+  except:
+      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ'])
 
-def PDFtiINFO(file):
-    folder='C:/FSR_Data/'
-    data = [None]*3
-    doc=fitz.open(file) #кряк с директорией
-    base = str(doc.loadPage(2).getText())
-    print(base)
-    if 'Фундаментальная математика и механика' in doc.loadPage(0).getText():
-        if '''Основания для участия в конкурсе по результатам вступительных испытаний, проводимых МГУ для отдельных
-    категорий поступающих (вместо ЕГЭ)
-    0''' in doc.loadPage(0).getText():
-            data[0] = 0
+def PDFtoINFO(file):
+    try:
+        folder='C:/FSR_Data/'
+        data = [None]*3
+        doc=fitz.open(file) #кряк с директорией
+        base = str(doc.loadPage(2).getText())
+        print(base)
+        if 'Фундаментальная математика и механика' in doc.loadPage(0).getText():
+            if '''Основания для участия в конкурсе по результатам вступительных испытаний, проводимых МГУ для отдельных
+        категорий поступающих (вместо ЕГЭ)
+        0''' in doc.loadPage(0).getText():
+                data[0] = 0
+            else:
+                data[0] = 1
+            j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+            start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+            buf = []
+            while(base[start] != '.'):
+                if base[start] not in {'\n', ' '}:
+                    buf.append(base[start])
+                start+=1
+                if base[start] == '.':
+                    buf.append(base[start])
+                    buf.append(base[start+1])
+                    buf.append(base[start+2])
+            data[1] = ''.join(buf) 
+            j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+        (при наличии)''')
+            start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+        (при наличии)''')
+            buf = []
+            while(base[start] != 'С'):
+                if base[start] not in {'\n', ' '}:
+                    buf.append(base[start])
+                start+=1
+            data[2] = ''.join(buf)
         else:
-            data[0] = 1
-        j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
-        start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
-        buf = []
-        while(base[start] != '.'):
-            if base[start] not in {'\n', ' '}:
-                buf.append(base[start])
-            start+=1
-        data[1] = ''.join(buf) 
-        j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-    (при наличии)''')
-        start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-    (при наличии)''')
-        buf = []
-        while(base[start] != 'С'):
-            if base[start] not in {'\n', ' '}:
-                buf.append(base[start])
-            start+=1
-        data[2] = ''.join(buf)
-    else:
-        base = str(doc.loadPage(1).getText())
-        j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
-        start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
-        buf = []
-        while(base[start] != '.'):
-            if base[start] not in {'\n', ' '}:
-                buf.append(base[start])
-            start+=1
-        data[1] = ''.join(buf) 
-        j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-    (при наличии)''')
-        start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-    (при наличии)''')
-        buf = []
-        while(base[start] != 'С'):
-            if base[start] not in {'\n', ' '}:
-                buf.append(base[start])
-            start+=1
-        data[2] = ''.join(buf)
+            base = str(doc.loadPage(1).getText())
+            j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+            start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
+            buf = []
+            indicator = '@'
+            while(base[start] != indicator):
+                if base[start] not in {'\n', ' '}:
+                    buf.append(base[start])
+                start+=1
+                if base[start] == '@':
+                    indicator = '.'
+            data[1] = ''.join(buf) 
+            j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+        (при наличии)''')
+            start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
+        (при наличии)''')
+            buf = []
+            while(base[start] != 'С'):
+                if base[start] not in {'\n', ' '}:
+                    buf.append(base[start])
+                start+=1
+            data[2] = ''.join(buf)
+    except:
+        print('*',err,'*')
+        input()
     return data
 
 
-
-folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
-main_base = pandas.read_csv(folder_path + 'base.csv') 
 folder_path = r'C:\FSR_Data' + '\\'
-
 def give_chrome_option(folder_path):
     chromeOptions = webdriver.ChromeOptions() #setup chrome option
     prefs = {"download.default_directory" : folder_path,
@@ -88,7 +95,8 @@ folder_path = 'C://FSR_Data/'
 
 
 def to_realtime(data):
-    dateFormatter = "%d.%m.%Y %H:%M:%S"    
+    dateFormatter = "%d.%m.%Y %H:%M:%S"
+    data = str(data).split('\n')[0]
     return datetime.strptime(data, dateFormatter)
 
 url='https://webanketa.msu.ru/index.php#panel-login-internal'
@@ -120,6 +128,10 @@ try:
             tbd=driver.find_element_by_tag_name('tbody')
             trs=tbd.find_elements_by_tag_name('tr') #множество строк
             for i in trs:
+                folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
+                main_base =  example()
+                folder_path = r'C:\FSR_Data' + '\\'
+
                 tds=i.find_elements_by_tag_name('td') #отдельно взятая строка
                 
                 num=tds[0].text.split('\n')[0]
@@ -140,15 +152,19 @@ try:
                 pdf_doc1 = folder_path + fname1 + '.pdf'
                 pdf_doc2 = folder_path + fname2 + '.pdf'
 
-                if main_base['ID'].str.contains(num).any():
-                    if (to_realtime(main_base.loc[df['ID'] == str(num), 'Дата']) == to_realtime(data_time)):
+                if main_base['ID'].astype(str).str.contains(num).any():
+                    try:
+                        buffer = str(main_base[main_base['ID'] == int(num)]['Дата'].astype(str)).split('    ')[1].strip('\n')
+                    except:
+                        print(str(main_base[main_base['ID'] == int(num)]['Дата'].astype(str)))
+                    if (to_realtime(buffer) == to_realtime(str(data_time))):
                         continue
                     else:
                         os.remove(pdf_doc)
                         os.remove(pdf_doc1)
                         os.remove(pdf_doc2)
-                        main_base.loc[df['ID'] == str(num), 'Дата'] = data_time
-                        main_base.loc[df['ID'] == str(num), 'Статус ошибок'] = status                
+                        main_base.loc[df['ID'] == num, 'Дата'] = data_time
+                        main_base.loc[df['ID'] == num, 'Статус ошибок'] = status                
                         
                 wa_doc = folder_path + fname + '.pdf'
                 wa_doc1 = folder_path + fname1 + '.pdf'
@@ -183,12 +199,12 @@ try:
                     flag = False
                     PDFinfo = PDFtoINFO(pdf_doc1)
 
-                new_row = {'ID':num, 'ФИО':name, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
+                new_row = {'ID':num, 'ФИО':name, 'Дата' : data_time, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
                            'Статус согласия': '-', 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0]}                
                 main_base = main_base.append(new_row, ignore_index=True)
                 folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
-                main_base.to_csv(folder_path + 'base.csv')
-                
+                main_base.to_csv(folder_path + 'base.csv', index=False)
+                folder_path = 'C://FSR_Data/'
         except Exception as err:
             print('*',err,'*')
             continue
