@@ -26,8 +26,8 @@ def PDFtoINFO(file):
         print(base)
         if 'Фундаментальная математика и механика' in doc.loadPage(0).getText():
             if '''Основания для участия в конкурсе по результатам вступительных испытаний, проводимых МГУ для отдельных
-        категорий поступающих (вместо ЕГЭ)
-        0''' in doc.loadPage(0).getText():
+категорий поступающих (вместо ЕГЭ)
+0''' in doc.loadPage(0).getText():
                 data[0] = 0
             else:
                 data[0] = 1
@@ -38,15 +38,11 @@ def PDFtoINFO(file):
                 if base[start] not in {'\n', ' '}:
                     buf.append(base[start])
                 start+=1
-                if base[start] == '.':
-                    buf.append(base[start])
-                    buf.append(base[start+1])
-                    buf.append(base[start+2])
             data[1] = ''.join(buf) 
             j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-        (при наличии)''')
+(при наличии)''')
             start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-        (при наличии)''')
+(при наличии)''')
             buf = []
             while(base[start] != 'С'):
                 if base[start] not in {'\n', ' '}:
@@ -67,18 +63,19 @@ def PDFtoINFO(file):
                     indicator = '.'
             data[1] = ''.join(buf) 
             j = base.find('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-        (при наличии)''')
+(при наличии)''')
             start = 1 + j + len('''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ
-        (при наличии)''')
+(при наличии)''')
             buf = []
             while(base[start] != 'С'):
                 if base[start] not in {'\n', ' '}:
                     buf.append(base[start])
                 start+=1
             data[2] = ''.join(buf)
-    except:
+    except Exception as err:
         print('*',err,'*')
         input()
+    data[1] = ''.join(i for i in data[1] if not i.isalpha())
     return data
 
 
