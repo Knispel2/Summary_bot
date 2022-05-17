@@ -56,7 +56,7 @@ timesleep()
 
 lnk=driver.find_element_by_link_text('Все заявления')
 lnk.click()
-ind=2
+ind=27
 timesleep()
 directions = []
 try:
@@ -92,8 +92,9 @@ try:
                 pdf_doc1 = folder_path + fname1 + '.pdf'
                 pdf_doc2 = folder_path + fname2 + '.pdf'
 
-                if main_base['ID'].astype(str).str.contains(num).any():
+                if main_base['ID'].astype(str).str.contains(num).any(): #а вот тут надо использовать другой способ для отслеживания
                     #здесь надо сделать обработку согласия
+                    debug_data3 = str(main_base[main_base['ID'] == int(num)]['ФИО'].astype(str))
                     try:
                         buffer = str(main_base[main_base['ID'] == int(num)]['Дата'].astype(str)).split('    ')[1].strip('\n')
                     except:
@@ -101,11 +102,24 @@ try:
                     if (to_realtime(buffer) == to_realtime(str(data_time))):
                         continue
                     else:
-                        os.remove(pdf_doc)
-                        os.remove(pdf_doc1)
-                        os.remove(pdf_doc2)
-                        main_base.loc[df['ID'] == num, 'Дата'] = data_time
-                        main_base.loc[df['ID'] == num, 'Статус ошибок'] = status                
+                        try:
+                            os.remove(pdf_doc)
+                            main_base.loc[main_base['ID'] == num, 'Дата'] = data_time
+                            main_base.loc[main_base['ID'] == num, 'Статус ошибок'] = status
+                        except:
+                            try:
+                                os.remove(pdf_doc1)
+                                main_base.loc[main_base['ID'] == num, 'Дата'] = data_time
+                                main_base.loc[main_base['ID'] == num, 'Статус ошибок'] = status
+                            except:
+                                try:
+                                   os.remove(pdf_doc2)
+                                   main_base.loc[main_base['ID'] == num, 'Дата'] = data_time
+                                   main_base.loc[main_base['ID'] == num, 'Статус ошибок'] = status
+                                except:
+                                    print("Не удалось удалить")
+                                    
+                                        
                         
                 wa_doc = folder_path + fname + '.pdf'
                 wa_doc1 = folder_path + fname1 + '.pdf'
@@ -118,8 +132,8 @@ try:
                 mft=driver.find_element_by_class_name('modal-footer')
                 prt=mft.find_element_by_class_name('btn-primary')
                 prt.click()
-                tick=0
-                while not(os.path.exists(pdf_doc)):
+                tick=0                
+                while not(os.path.exists(pdf_doc)) or not(os.path.exists(pdf_doc2)):
                     if os.path.exists(pdf_doc1):
                         fname=fname1
                         pdf_doc=pdf_doc1
@@ -136,6 +150,9 @@ try:
                 flag = True
                 if os.path.exists(pdf_doc):
                     PDFinfo = PDFtoINFO_brute(pdf_doc)
+                elif os.path.exists(pdf_doc1):
+                    flag = False
+                    PDFinfo = PDFtoINFO_brute(pdf_doc1)
                 elif os.path.exists(pdf_doc1):
                     flag = False
                     PDFinfo = PDFtoINFO_brute(pdf_doc1)
