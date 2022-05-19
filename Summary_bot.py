@@ -70,6 +70,8 @@ try:
                 folder_path = r'C:\FSR_Data' + '\\'
 
                 tds=i.find_elements_by_tag_name('td') #отдельно взятая строка
+                sogl_attr = tds[0].find_element_by_class_name("btn btn-xs  btn-danger  btn-xs").get_attribute("data-original-title")
+                print(sogl_attr)
                 if 'С' in tds[0].text:
                     sogl = True
                 else:
@@ -92,7 +94,7 @@ try:
                 pdf_doc1 = folder_path + fname1 + '.pdf'
                 pdf_doc2 = folder_path + fname2 + '.pdf'
 
-                if main_base['ID'].astype(str).str.contains(num).any(): #а вот тут надо использовать другой способ для отслеживания
+                if main_base['ID'].isin(num): #а вот тут надо использовать другой способ для отслеживания
                     #здесь надо сделать обработку согласия
                     debug_data3 = str(main_base[main_base['ID'] == int(num)]['ФИО'].astype(str))
                     try:
