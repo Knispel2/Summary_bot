@@ -17,7 +17,7 @@ def example():
   try:
       return pandas.read_csv(folder_path + 'base.csv')
   except:
-      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ', 'Направление'])
+      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ', 'Направление', 'БВИ'])
 
 
 folder_path = r'C:\FSR_Data' + '\\'
@@ -69,20 +69,21 @@ try:
                 folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
                 main_base =  example()
                 folder_path = r'C:\FSR_Data' + '\\'
-
                 tds=i.find_elements_by_tag_name('td') #отдельно взятая строка
-                #sogl_attr = tds.find_element_by_class_name('btn-xs').get_attribute('data-original-title')
-                #print(sogl_attr)
-                #input()
+                BVI = "Нет"
+
                 if 'С' in tds[0].text:
-                    sogl = True
+                    try:
+                        sogl = tds[0].find_element_by_class_name('btn-success').get_attribute('data-original-title')
+                    except:
+                        sogl = tds[0].find_element_by_class_name('btn-danger').get_attribute('data-original-title')
                 else:
-                    sogl = False
+                    sogl = "Нет"
                 num=tds[0].text.split('\n')[0].strip()
                 name=tds[1].text
                 data_time = tds[6].text
                 status = tds[5].text
-                direction = tds[3].text.split('\n')
+                direction = tds[3].text.split('\n')[0]
                 directions = directions + tds[3].text.split('\n')
                 update_flag = False
                 nname=name.split()
@@ -98,7 +99,7 @@ try:
                 
                 debug_delta = main_base['ID'].unique()
                 if numpy.int64(num) in debug_delta:
-                    #здесь надо сделать обработку согласия
+                    main_base.loc[main_base['ID'] == numpy.int64(num), ['Статус согласия']] = sogl #тут потом добавить проверку, что если согласия не было, то сообщить, куда надо
                     debug_data3 = str(main_base[main_base['ID'] == int(num)]['ФИО'].astype(str))
                     try:
                         buffer = str(main_base[main_base['ID'] == int(num)]['Дата'].astype(str)).split('    ')[1].strip('\n')
@@ -122,8 +123,7 @@ try:
                         main_base.loc[main_base['ID'] == numpy.int64(num), ['Дата']] = data_time
                         main_base.loc[main_base['ID'] == numpy.int64(num), ['Статус ошибок']] = status
                     except:
-                        print("Кряк")  
-                    main_base.to_csv(folder_path + 'base.csv', index=False)
+                        print("Кряк")
                     update_flag = True
                 wa_doc = folder_path + fname + '.pdf'
                 wa_doc1 = folder_path + fname1 + '.pdf'
@@ -161,21 +161,26 @@ try:
                     flag = False
                     PDFinfo = PDFtoINFO_brute(pdf_doc1)
                 new_row = {'ID':num, 'ФИО':name, 'Дата' : data_time, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
-                           'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction}                
+                           'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction, 'БВИ' : BVI}                
                 if not update_flag:
                     main_base = main_base.append(new_row, ignore_index=True)
                 folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
-                main_base.to_csv(folder_path + 'base.csv', index=False)
+                main_base.to_csv(folder_path + 'base.csv', index=False, encoding="utf-8")
                 folder_path = 'C://FSR_Data/'
         except Exception as err:
             print('*',err,'*')
             continue
         try:
+            timesleep()
             lnk=driver.find_element_by_link_text(str(ind))
             lnk.click()
         except:
-            print("Страницы закончились")
-            break
+            try:
+                lnk=driver.find_element_by_link_text(str(ind))
+                lnk.click()
+            except Exception as err:
+                print("Страницы закончились: ", err)
+                break
         timesleep()
         ind+=1
 except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
