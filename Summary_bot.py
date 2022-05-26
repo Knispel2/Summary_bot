@@ -17,7 +17,7 @@ def example():
   try:
       return pandas.read_csv(folder_path + 'base.csv')
   except:
-      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ', 'Направление', 'БВИ'])
+      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ', 'Направление', 'БВИ', 'Зона'])
 
 
 folder_path = r'C:\FSR_Data' + '\\'
@@ -71,7 +71,6 @@ try:
                 folder_path = r'C:\FSR_Data' + '\\'
                 tds=i.find_elements_by_tag_name('td') #отдельно взятая строка
                 BVI = "Нет"
-
                 if 'С' in tds[0].text:
                     try:
                         sogl = tds[0].find_element_by_class_name('btn-success').get_attribute('data-original-title')
@@ -161,7 +160,7 @@ try:
                     flag = False
                     PDFinfo = PDFtoINFO_brute(pdf_doc1)
                 new_row = {'ID':num, 'ФИО':name, 'Дата' : data_time, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
-                           'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction, 'БВИ' : BVI}                
+                           'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction, 'БВИ' : BVI, 'Зона' : PDFinfo[3]}                
                 if not update_flag:
                     main_base = main_base.append(new_row, ignore_index=True)
                 folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
@@ -178,17 +177,13 @@ try:
             try:
                 lnk=driver.find_element_by_link_text(str(ind))
                 lnk.click()
-            except Exception as err:
-                print("Страницы закончились: ", err)
+            except:
+                print("Страницы закончились: ")
                 break
         timesleep()
         ind+=1
 except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
     print(err)
 
-
-
-print(collections.Counter(directions))
-print()
 
 
