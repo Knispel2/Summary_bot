@@ -144,16 +144,14 @@ def PDFtoINFO_brute(file):
                     start+=1
                 data[3] = reg_zones[''.join(buf)]
             if 'КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ' in doc.loadPage(counter).getText():
+                #print(doc.loadPage(counter).getText())
                 j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
                 start = 2 + j + len('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
                 buf = []
-                indicator = '@'
-                while(base[start] != indicator):
+                while(not (base[start].isalpha())):
                     if base[start] not in {'\n', ' '}:
                         buf.append(base[start])
                     start+=1
-                    if base[start] == '@':
-                        indicator = '.'                
                 data[1] = ''.join(buf)
                 data[1] = ''.join(i for i in data[1] if (not i.isalpha()) and (not i in {'@'}))
             if '''НОМЕР СТРАХОВОГО СВИДЕТЕЛЬСТВА ОБЯЗАТЕЛЬНОГО ПЕНСИОННОГО СТРАХОВАНИЯ РФ

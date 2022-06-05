@@ -17,7 +17,7 @@ def example():
   try:
       return pandas.read_csv(folder_path + 'base.csv')
   except:
-      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ', 'Направление', 'БВИ', 'Зона'])
+      return pandas.DataFrame(columns = ['ID', 'ФИО', 'Дата', 'Номер телефона', 'Полис', 'Статус согласия', 'Статус ошибок', 'Вместо ЕГЭ', 'Направление', 'БВИ', 'Зона', 'Новое согласие?'])
 
 
 folder_path = r'C:\FSR_Data' + '\\'
@@ -95,9 +95,12 @@ try:
                 pdf_doc = folder_path + fname + '.pdf'
                 pdf_doc1 = folder_path + fname1 + '.pdf'
                 pdf_doc2 = folder_path + fname2 + '.pdf'
-                
+                new_sogl_status = False
                 debug_delta = main_base['ID'].unique()
                 if numpy.int64(num) in debug_delta:
+                    print(main_base.loc[main_base['ID'] == numpy.int64(num), 'Статус согласия'].unique()[0])
+                    if (main_base.loc[main_base['ID'] == numpy.int64(num), 'Статус согласия'].unique()[0] != sogl):
+                        new_sogl_status = True
                     main_base.loc[main_base['ID'] == numpy.int64(num), ['Статус согласия']] = sogl #тут потом добавить проверку, что если согласия не было, то сообщить, куда надо
                     debug_data3 = str(main_base[main_base['ID'] == int(num)]['ФИО'].astype(str))
                     try:
@@ -159,8 +162,8 @@ try:
                 elif os.path.exists(pdf_doc1):
                     flag = False
                     PDFinfo = PDFtoINFO_brute(pdf_doc1)
-                new_row = {'ID':num, 'ФИО':name, 'Дата' : data_time, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
-                           'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction, 'БВИ' : BVI, 'Зона' : PDFinfo[3]}                
+                new_row = {'ID':num, 'ФИО':name.upper(), 'Дата' : data_time, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
+                           'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction, 'БВИ' : BVI, 'Зона' : PDFinfo[3], 'Новое согласие?' : new_sogl_status}                
                 if not update_flag:
                     main_base = main_base.append(new_row, ignore_index=True)
                 folder_path = r'C:\\FSR_Data' + '\\' + 'base' + '\\'
@@ -169,16 +172,16 @@ try:
         except Exception as err:
             print('*',err,'*')
             continue
-        try:
-            timesleep()
+        try:            
             lnk=driver.find_element_by_link_text(str(ind))
             lnk.click()
         except:
             try:
+                btn.click()
                 lnk=driver.find_element_by_link_text(str(ind))
                 lnk.click()
             except:
-                print("Страницы закончились: ")
+                print("Страницы закончились:", str(ind))
                 break
         timesleep()
         ind+=1
