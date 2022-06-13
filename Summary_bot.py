@@ -137,6 +137,7 @@ def Webanketa_update():
         ok.click()
     except common.exceptions.NoSuchElementException:
         print('Already authtorised')
+        return 1
     timesleep()
 
     lnk=driver.find_element_by_link_text('Все заявления')
@@ -270,11 +271,12 @@ def Webanketa_update():
                     lnk.click()
                 except:
                     print("Страницы закончились:", str(ind))
-                    break
+                    return 0
             timesleep()
             ind+=1
     except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
         print(err)
+        return 2
 
 
 Webanketa_update()
