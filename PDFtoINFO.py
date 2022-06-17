@@ -137,12 +137,12 @@ def PDFtoINFO_brute(file):
                 j = base.find('ДЛЯ РОССИИ - НАЗВАНИЕ СУБЪЕКТА ФЕДЕРАЦИИ')
                 start = 2 + j + len('ДЛЯ РОССИИ - НАЗВАНИЕ СУБЪЕКТА ФЕДЕРАЦИИ')
                 buf = []
-                indicator = '2'
-                while(base[start] != indicator):
+                while(not (base[start].isdigit())):
                     if base[start] not in {'\n', ' '}:
                         buf.append(base[start])
                     start+=1
-                data[3] = reg_zones[''.join(buf)]
+                if (buf!=[]):
+                    data[3] = reg_zones[''.join(buf)]
             if 'КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ' in doc.loadPage(counter).getText():
                 #print(doc.loadPage(counter).getText())
                 j = base.find('КОНТАКТНЫЕ ТЕЛЕФОНЫ (городской с кодом города и мобильный) И АДРЕС ЭЛЕКТРОННОЙ ПОЧТЫ')
@@ -165,7 +165,8 @@ def PDFtoINFO_brute(file):
                          if base[start] not in {'\n', ' '}:
                              buf2.append(base[start])
                          start+=1
-                     data[2] = ''.join(buf2)
+                     if (buf2!=[]):
+                         data[2] = ''.join(buf2)
             counter+=1
         except:
             break
@@ -173,5 +174,5 @@ def PDFtoINFO_brute(file):
 
 
 #folder='C:/FSR_Data/'
-#print(PDFtoINFO_brute(folder + 'кирдин_св_21547.pdf'))
+#print(PDFtoINFO_brute(folder + 'ЛУ_ЧЖИЯО_848.pdf'))
 #input()

@@ -124,24 +124,20 @@ def Webanketa_update():
     url='https://webanketa.msu.ru/index.php#panel-login-internal'
     driver.get(url)
     try:
-        lnk=driver.find_element_by_link_text('Вход для сотрудников')
+        lnk=driver.find_element_by_link_text('вход для сотрудников')
         lnk.click()
         timesleep()
-        vds=driver.find_element_by_id('panel-login-internal')
-        login=vds.find_element_by_id('pageLogin_login')
-        login.send_keys('39_vladikina.v.e.')
-        pas=vds.find_element_by_name('pageLogin_password')
-        pas.send_keys('86296953')
+        login=driver.find_element_by_id('login_0_0_phone_phone')
+        login.send_keys('9002538683')    
+        pas=driver.find_element_by_name('login_password')
+        pas.send_keys('2507570366')
         timesleep()
-        ok=vds.find_element_by_name('pageLogin_login_emp')
-        ok.click()
+        vds=driver.find_element_by_class_name('login')
+        vds.click()
     except common.exceptions.NoSuchElementException:
         print('Already authtorised')
         return 1
     timesleep()
-
-    lnk=driver.find_element_by_link_text('Все заявления')
-    lnk.click()
     ind=2
     timesleep()
     directions = []
@@ -174,12 +170,15 @@ def Webanketa_update():
                     fname=nname[0]+'_'+nname[1][0]+(nname[2][0] if len(nname)>2 else '')+'_'+num
                     fname1=nname[0]+'_'+nname[1][0]+'_'+tds[0].text
                     fname2=nname[0]+'_'+nname[1][0]+'_'+num
-                    fname=fname.strip().casefold()
-                    fname1=fname1.strip().casefold()
-                    fname2=fname2.strip().casefold()
+                    fname_ultra = nname[0]+'_'+nname[1]+'_'+num
+                    fname=fname.strip().upper()
+                    fname1=fname1.strip().upper()
+                    fname2=fname2.strip().upper()
+                    fname_ultra=fname_ultra.strip().upper()
                     pdf_doc = folder_path + fname + '.pdf'
                     pdf_doc1 = folder_path + fname1 + '.pdf'
                     pdf_doc2 = folder_path + fname2 + '.pdf'
+                    pdf_doc_ultra = folder_path + fname_ultra + '.pdf'
                     new_sogl_status = False
                     debug_delta = main_base['ID'].unique()
                     if numpy.int64(num) in debug_delta:
@@ -202,7 +201,7 @@ def Webanketa_update():
                                     os.remove(pdf_doc1)
                                 except:
                                     try:
-                                       os.remove(pdf_doc2)                                   
+                                       os.remove(pdf_doc_ultra)                                   
                                     except:
                                         print("Не удалось удалить")
                         try:
@@ -224,20 +223,30 @@ def Webanketa_update():
                     prt=mft.find_element_by_class_name('btn-primary')
                     prt.click()
                     tick=0                
-                    while not(os.path.exists(pdf_doc)) and not(os.path.exists(pdf_doc2)):
+                    while True:
+                        if not(os.path.exists(pdf_doc)) and not(os.path.exists(pdf_doc2)) and not(os.path.exists(pdf_doc_ultra)):
+                            continue
                         if os.path.exists(pdf_doc1):
                             fname=fname1
                             pdf_doc=pdf_doc1
                             break
+                        if os.path.exists(pdf_doc2):
+                            fname=fname1
+                            pdf_doc=pdf_doc2
+                            break
+                        if os.path.exists(pdf_doc_ultra):
+                            fname=fname_ultra
+                            pdf_doc=pdf_doc_ultra
+                            break
                         time.sleep(2)
-                        tick+=1
-                        if tick==10:
-                            for file in filter(lambda x:x.endswith('.pdf'),os.listdir(folder_path)):
-                                if nname[0].lower() in file:
-                                    fname=file[:-4]
-                                    pdf_doc=folder_path+fname+'.pdf'
-                                    break
-                            tick=0
+                        #tick+=1
+                        #if tick==10:
+                        #    for file in filter(lambda x:x.endswith('.pdf'),os.listdir(folder_path)):
+                        #        if nname[0].upper() in file:
+                        #            fname=file[:-4]
+                        #            pdf_doc=folder_path+fname+'.pdf'
+                        #            break
+                        #    tick=0
                     flag = True
                     if os.path.exists(pdf_doc):
                         PDFinfo = PDFtoINFO_brute(pdf_doc)
