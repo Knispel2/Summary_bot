@@ -284,7 +284,7 @@ def Webanketa_update():
                     return 0
             timesleep()
             ind+=1
-    except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException) as err:
+    except (common.exceptions.ElementClickInterceptedException,common.exceptions.NoSuchElementException,common.exceptions.ElementNotInteractableException,common.exceptions.ConnectionClosedException) as err:
         print(err)
         return 2
 
