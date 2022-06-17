@@ -260,6 +260,7 @@ def Webanketa_update():
                         BVI = "Победопризёр космонавтики"
                     elif name.upper() in vseross:
                         BVI = "Всероссник по астрономии"
+                    PDFinfo[1] = ','.join(list(filter(lambda x: '+' in x, PDFinfo[1].split(','))))
                     new_row = {'ID':num, 'ФИО':name.upper(), 'Дата' : data_time, 'Номер телефона': PDFinfo[1], 'Полис' : PDFinfo[2],
                                'Статус согласия': sogl, 'Статус ошибок' : status, 'Вместо ЕГЭ' : PDFinfo[0], 'Направление' : direction, 'Зона' : PDFinfo[3], 'Новое согласие?' : new_sogl_status, 'Олимпиадник?' : BVI}                
                     if not update_flag:
@@ -288,7 +289,7 @@ def Webanketa_update():
         return 2
 
 
-Webanketa_update()
+#Webanketa_update()
 
 #if __name__ == "__main__":
 #    Webanketa_update()
